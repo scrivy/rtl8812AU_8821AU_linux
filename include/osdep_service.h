@@ -164,8 +164,8 @@ extern void	_rtw_mfree(u8 *pbuf, u32 sz);
 extern void*	rtw_malloc2d(int h, int w, int size);
 extern void	rtw_mfree2d(void *pbuf, int h, int w, int size);
 
-extern void	_rtw_memcpy(void* dec, void* sour, u32 sz);
-extern int	_rtw_memcmp(void *dst, void *src, u32 sz);
+extern void	_rtw_memcpy(void* dec, const void* sour, u32 sz);
+extern int	_rtw_memcmp(const void *dst, const void *src, u32 sz);
 extern void	_rtw_memset(void *pbuf, int c, u32 sz);
 
 extern void	_rtw_init_listhead(_list *list);
@@ -206,7 +206,7 @@ extern void	rtw_sleep_schedulable(int ms);
 extern void	rtw_msleep_os(int ms);
 extern void	rtw_usleep_os(int us);
 
-extern u32 	rtw_atoi(u8* s);
+extern u32 	rtw_atoi(const u8* s);
 
 #ifdef DBG_DELAY_OS
 #define rtw_mdelay_os(ms) _rtw_mdelay_os((ms), __FUNCTION__, __LINE__)

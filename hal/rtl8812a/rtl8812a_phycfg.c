@@ -921,7 +921,10 @@ PHY_ConvertPowerLimitToPowerIndex(
 							// obtain the base dBm values in 5G band
 							// OFDM => 54M, HT 1T => MCS7, HT 2T => MCS15, 
 							// VHT => 1SSMCS7, VHT 2T => 2SSMCS7
-							if ( rateSection == 1 ) { //OFDM
+							if ( rateSection == 0 ) { //CCK - Unused by 5g, but if baseIndex5G is undefined, causes crash
+								baseIndex5G = phy_getPowerByRateBaseIndex( BAND_ON_5G, MGN_11M );
+							}
+							else if ( rateSection == 1 ) { //OFDM
 								baseIndex5G = phy_getPowerByRateBaseIndex( BAND_ON_5G, MGN_54M );
 							}
 							else if ( rateSection == 2 ) { //HT 1T
@@ -1043,7 +1046,10 @@ PHY_ConvertPowerLimitToPowerIndex(
 							// obtain the base dBm values in 5G band
 							// OFDM => 54M, HT 1T => MCS7, HT 2T => MCS15, 
 							// VHT => 1SSMCS7, VHT 2T => 2SSMCS7
-							if ( rateSection == 1 ) { //OFDM
+							if ( rateSection == 0 ) { //CCK - Unused by 5g, but if baseIndex5G is undefined, causes crash
+								baseIndex5G = phy_getPowerByRateBaseIndex( BAND_ON_5G, MGN_11M );
+							}
+							else if ( rateSection == 1 ) { //OFDM
 								baseIndex5G = phy_getPowerByRateBaseIndex( BAND_ON_5G, MGN_54M );
 							}
 							else if ( rateSection == 2 ) { //HT 1T
@@ -1266,9 +1272,9 @@ PHY_GetPowerLimitValue(
 			break;
 	}
 
-	if ( BAND_ON_2_4G  && rateSection > 3 )
+	if ( Band == BAND_ON_2_4G  && rateSection > 3 )
 			DBG_871X("Wrong rate 0x%x: No VHT in 2.4G Band\n", DataRate );
-	if ( BAND_ON_5G  && rateSection == 0 )
+	if ( Band == BAND_ON_5G  && rateSection == 0 )
 			DBG_871X("Wrong rate 0x%x: No CCK in 5G Band\n", DataRate );
 
 	// workaround for wrong index combination to obtain tx power limit, 
