@@ -9,7 +9,8 @@ This code is base on version 4.3.14 from https://github.com/diederikdehaas/rtl88
 ## Known Supported Devices:
 
 ```
-* COMFAST 1200Mbps USB Wireless Adapter(Model: CF-912AC)
+* COMFAST 1200Mbps USB Wireless Adapter (Model: CF-912AC)
+* OURLINK 600Mbps mini 802.11ac Dual Band 2.4G/5G Wireless Network Adapter (Model 6436305)
 ```
 
 ## Compiling with DKMS
