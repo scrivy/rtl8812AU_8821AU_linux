@@ -48,6 +48,22 @@ CONFIG_PLATFORM_ARM_RPI = y
 # sudo make install
 # sudo modprobe -a rtl8812au
 ```
+### Compiling for NVIDIA Jetson Nano
+
+Edit Makefile and turn on ``CONFIG_PLATFORM_JETSON_NANO``, turn off ``CONFIG_PLATFORM_I386_PC``
+
+```sh
+CONFIG_PLATFORM_I386_PC = n
+CONFIG_PLATFORM_JETSON_NANO = y
+```
+
+```sh
+# cd /usr/src/rtl8812au
+# sudo make clean
+# sudo make
+# sudo make install
+# sudo modprobe rtl8812au
+```
 
 ### Compiling for Ubuntu (16.04)
 
