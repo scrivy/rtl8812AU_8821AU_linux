@@ -686,15 +686,20 @@ unsigned int rtw_classify8021d(struct sk_buff *skb)
 }
 
 
-static u16 rtw_select_queue(struct net_device *dev, struct sk_buff *skb
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 13, 0)
-                            , void *accel_priv
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
-                            , select_queue_fallback_t fallback
+#if (LINUX_VERSION_CODE>=KERNEL_VERSION(5,2,0))
+static u16 rtw_select_queue(struct net_device *dev, struct sk_buff *skb,
+       struct net_device *sb_dev)
+#elif (LINUX_VERSION_CODE>=KERNEL_VERSION(4,19,0))
+static u16 rtw_select_queue(struct net_device *dev, struct sk_buff *skb,
+       struct net_device *sb_dev,
+       select_queue_fallback_t fallback)
+#elif (LINUX_VERSION_CODE>=KERNEL_VERSION(3,14,0))
+static u16 rtw_select_queue(struct net_device *dev, struct sk_buff *skb,
+       void *accel_priv,
+       select_queue_fallback_t fallback)
+#else
+static u16 rtw_select_queue(struct net_device *dev, struct sk_buff *skb)
 #endif
-
-#endif
-                           )
 {
 	_adapter	*padapter = rtw_netdev_priv(dev);
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
@@ -745,12 +750,14 @@ static int rtw_ndev_notifier_call(struct notifier_block * nb, unsigned long stat
 	struct net_device *dev = ptr;
 #endif
 
+#ifdef CONFIG_WIRELESS_EXT
 #if (LINUX_VERSION_CODE>=KERNEL_VERSION(2,6,29))
 	if (dev->netdev_ops->ndo_do_ioctl != rtw_ioctl)
 #else
 	if (dev->do_ioctl != rtw_ioctl)
 #endif
 		return NOTIFY_DONE;
+#endif
 
 	DBG_871X_LEVEL(_drv_info_, FUNC_NDEV_FMT" state:%lu\n", FUNC_NDEV_ARG(dev), state);
 
@@ -810,7 +817,9 @@ static const struct net_device_ops rtw_netdev_ops = {
 #endif
 	.ndo_set_mac_address = rtw_net_set_mac_address,
 	.ndo_get_stats = rtw_net_get_stats,
+#ifdef CONFIG_WIRELESS_EXT
 	.ndo_do_ioctl = rtw_ioctl,
+#endif
 };
 #endif
 
@@ -896,7 +905,9 @@ struct net_device *rtw_init_netdev(_adapter *old_padapter)
 	pnetdev->hard_start_xmit = rtw_xmit_entry;
 	pnetdev->set_mac_address = rtw_net_set_mac_address;
 	pnetdev->get_stats = rtw_net_get_stats;
+#ifdef CONFIG_WIRELESS_EXT
 	pnetdev->do_ioctl = rtw_ioctl;
+#endif
 #endif
 
 
@@ -1598,7 +1609,9 @@ static const struct net_device_ops rtw_netdev_vir_if_ops = {
 	.ndo_start_xmit = rtw_xmit_entry,
 	.ndo_set_mac_address = rtw_net_set_mac_address,
 	.ndo_get_stats = rtw_net_get_stats,
+#ifdef CONFIG_WIRELESS_EXT
 	.ndo_do_ioctl = rtw_ioctl,
+#endif
 #if (LINUX_VERSION_CODE>=KERNEL_VERSION(2,6,35))
 	.ndo_select_queue	= rtw_select_queue,
 #endif
@@ -1989,7 +2002,9 @@ static const struct net_device_ops rtw_netdev_if2_ops = {
 	.ndo_start_xmit = rtw_xmit_entry,
 	.ndo_set_mac_address = rtw_net_set_mac_address,
 	.ndo_get_stats = rtw_net_get_stats,
+#ifdef CONFIG_WIRELESS_EXT
 	.ndo_do_ioctl = rtw_ioctl,
+#endif
 #if (LINUX_VERSION_CODE>=KERNEL_VERSION(2,6,35))
 	.ndo_select_queue	= rtw_select_queue,
 #endif

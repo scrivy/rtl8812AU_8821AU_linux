@@ -672,6 +672,8 @@ static void _mgt_dispatcher(_adapter *padapter, struct mlme_handler *ptable, uni
 
 void mgt_dispatcher(_adapter *padapter, union recv_frame *precv_frame)
 {
+	int subtype;
+
 	int index;
 	struct mlme_handler *ptable;
 #ifdef CONFIG_AP_MODE
@@ -751,50 +753,61 @@ void mgt_dispatcher(_adapter *padapter, union recv_frame *precv_frame)
 #endif
 
 #ifdef CONFIG_AP_MODE
-	switch (GetFrameSubType(pframe)) {
-	case WIFI_AUTH:
+	subtype = GetFrameSubType(pframe);
+	if ((subtype == WIFI_AUTH) ||
+	    (subtype == WIFI_ASSOCREQ) ||
+	    (subtype == WIFI_REASSOCREQ))
+	{
 		if(check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE)
+		{
 			ptable->func = &OnAuth;
+		}
 		else
+		{
 			ptable->func = &OnAuthClient;
-	//pass through
-	case WIFI_ASSOCREQ:
-	case WIFI_REASSOCREQ:
-		_mgt_dispatcher(padapter, ptable, precv_frame);
-#ifdef CONFIG_HOSTAPD_MLME
-		if(check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE)
-			rtw_hostapd_mlme_rx(padapter, precv_frame);
-#endif
-		break;
-	case WIFI_PROBEREQ:
-		if(check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE) {
-#ifdef CONFIG_HOSTAPD_MLME
-			rtw_hostapd_mlme_rx(padapter, precv_frame);
-#else
+		}
+
+		// fallthrough
+		if ((subtype == WIFI_ASSOCREQ) ||
+		    (subtype == WIFI_REASSOCREQ))
+		{
 			_mgt_dispatcher(padapter, ptable, precv_frame);
-#endif
-		} else
+
+			if(check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE)
+			{
+				rtw_hostapd_mlme_rx(padapter, precv_frame);
+			}
+		}
+	}
+	else if (subtype == WIFI_PROBEREQ)
+	{
+		if (check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE) {
+			#ifdef CONFIG_HOSTAPD_MLME
+				rtw_hostapd_mlme_rx(padapter, precv_frame);
+			#else
+				_mgt_dispatcher(padapter, ptable, precv_frame);
+			#endif
+		}
+		else
+		{
 			_mgt_dispatcher(padapter, ptable, precv_frame);
-		break;
-	case WIFI_BEACON:
+		}
+	} else if (subtype == WIFI_BEACON ||
+	           subtype == WIFI_ACTION)
+	{
 		_mgt_dispatcher(padapter, ptable, precv_frame);
-		break;
-	case WIFI_ACTION:
-		//if(check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE)
-		_mgt_dispatcher(padapter, ptable, precv_frame);
-		break;
-	default:
+	}
+	else
+	{
 		_mgt_dispatcher(padapter, ptable, precv_frame);
 		if(check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE)
+		{
 			rtw_hostapd_mlme_rx(padapter, precv_frame);
-		break;
+		}
 	}
 #else
-
 	_mgt_dispatcher(padapter, ptable, precv_frame);
-
 #endif
-
 }
 
 #ifdef CONFIG_P2P
@@ -3534,7 +3547,8 @@ void issue_p2p_GO_response(_adapter *padapter, u8* raddr, u8* frame_body,uint le
 	u8			action = P2P_PUB_ACTION_ACTION;
 	u32			p2poui = cpu_to_be32(P2POUI);
 	u8			oui_subtype = P2P_GO_NEGO_RESP;
-	u8			wpsie[ 255 ] = { 0x00 }, p2pie[ 255 ] = { 0x00 };
+	u8                      *wpsie;
+	u8			p2pie[ 255 ] = { 0x00 };
 	u8			p2pielen = 0;
 	uint			wpsielen = 0;
 	u16			wps_devicepassword_id = 0x0000;
@@ -3559,6 +3573,8 @@ void issue_p2p_GO_response(_adapter *padapter, u8* raddr, u8* frame_body,uint le
 	if ((pmgntframe = alloc_mgtxmitframe(pxmitpriv)) == NULL) {
 		return;
 	}
+
+	wpsie = rtw_zmalloc(256);
 
 	DBG_871X( "[%s] In, result = %d\n", __FUNCTION__,  result );
 	//update attribute
@@ -3964,6 +3980,8 @@ void issue_p2p_GO_response(_adapter *padapter, u8* raddr, u8* frame_body,uint le
 	pattrib->last_txcmdsz = pattrib->pktlen;
 
 	dump_mgntframe(padapter, pmgntframe);
+
+	kfree(wpsie);
 
 	return;
 
